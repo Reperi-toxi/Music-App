@@ -5,7 +5,7 @@ import pygame
 # will potentially be modified further
 
 class MusicPlayer:
-    def __init__(self, folder="songs"):
+    def __init__(self, folder):
         self.folder = folder
         self.music_files = []
 
@@ -30,13 +30,12 @@ class MusicPlayer:
         ]  # checks if the files are mp3
 
     def get_position(self):
-        """Returns the actual current playback position in seconds."""
         if not self.is_playing or self.is_paused or self.play_start_time is None:
             return self.current_position
         return self.current_position + (time.time() - self.play_start_time)
 
     # controls
-    def load(self, music_file_name):
+    def load(self, music_file_name): # load specific music
         music_path = os.path.join(self.folder, music_file_name)
         pygame.mixer.music.load(music_path)
 
@@ -45,7 +44,7 @@ class MusicPlayer:
         self.is_paused = False
         self.is_playing = False
 
-    def play(self, position=None):
+    def play(self, position=None): # play the loaded music
         if position is not None:
             self.current_position = position
         pygame.mixer.music.play(start=self.current_position)
@@ -63,7 +62,7 @@ class MusicPlayer:
     def resume(self):
         if self.is_paused:
             pygame.mixer.music.unpause()
-            self.play_start_time = time.time()  # reset wall-clock from now
+            self.play_start_time = time.time()  # reset
             self.is_paused = False
 
     def stop(self):
@@ -73,11 +72,11 @@ class MusicPlayer:
         self.is_playing = False
         self.is_paused = False
 
-    def seek_back(self, seconds=5):
+    def go_back(self, seconds=5):
         # Go back 5 seconds
         self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
 
-    def seek_forward(self, seconds=5):
+    def go_forward(self, seconds=5):
         # Go forward 5 seconds
         self.play(self.get_position() + seconds)
 
