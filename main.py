@@ -25,34 +25,37 @@ class MainWindow(QMainWindow):
 
         # Buttons labels and etc. ----------------------------------------------------
         self.play_button : QPushButton = QPushButton("Play", self.buttons_widget)
+        self.stop_button: QPushButton = QPushButton("Stop", self.buttons_widget)
         self.forward_button : QPushButton = QPushButton("+5", self.buttons_widget)
         self.backward_button : QPushButton = QPushButton("-5", self.buttons_widget)
         self.main_label = QLabel("Music App", self.title_widget)
         # layouts -----------------------------------------------------------------
         self.setCentralWidget(self.central_widget)
-        main_layout = QVBoxLayout()
-        title_layout = QHBoxLayout()
-        button_layout = QHBoxLayout()
-        music_list_layout = QVBoxLayout()
+        self.main_layout = QVBoxLayout()
+        self.title_layout = QHBoxLayout()
+        self.button_layout = QHBoxLayout()
+        self.music_list_layout = QVBoxLayout()
         # Assign to layouts -----------------------------------------
         # add widgets to layouts
-        main_layout.addWidget(self.title_widget, stretch=1)
-        main_layout.addWidget(self.buttons_widget, stretch=3)
-        main_layout.addWidget(self.music_list_widget, stretch=8)
+        self.main_layout.addWidget(self.title_widget, stretch=1)
+        self.main_layout.addWidget(self.buttons_widget, stretch=3)
+        self.main_layout.addWidget(self.music_list_widget, stretch=8)
 
-        title_layout.addWidget(self.main_label)
+        self.title_layout.addWidget(self.main_label)
 
-        button_layout.addWidget(self.backward_button)
-        button_layout.addWidget(self.play_button)
-        button_layout.addWidget(self.forward_button)
+        self.button_layout.addWidget(self.backward_button)
+        self.button_layout.addWidget(self.play_button)
+        self.button_layout.addWidget(self.stop_button)
+        self.button_layout.addWidget(self.forward_button)
         # assigning layouts to main blocks
-        self.central_widget.setLayout(main_layout)
-        self.title_widget.setLayout(title_layout)
-        self.buttons_widget.setLayout(button_layout)
-        self.music_list_widget.setLayout(music_list_layout)
+        self.central_widget.setLayout(self.main_layout)
+        self.title_widget.setLayout(self.title_layout)
+        self.buttons_widget.setLayout(self.button_layout)
+        self.music_list_widget.setLayout(self.music_list_layout)
 
         self.init_ui()
         self.is_song_playing = False
+        self.song_widgets = []
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
@@ -67,6 +70,12 @@ class MainWindow(QMainWindow):
         self.play_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
         self.play_button.clicked.connect(self.on_click_play)
+        # -- Stop button --------------------------------------------------------
+        self.stop_button.setGeometry(300, 200, 100, 100)
+        self.stop_button.setFont(QFont("Consolas", 16))
+        self.stop_button.setStyleSheet("Color: rgb(4, 43, 94);" 
+                             "Background-Color: White;")
+        self.stop_button.clicked.connect(self.on_click_stop)
         # -- forward button --------------------------------------------------------
         self.forward_button.setFont(QFont("Consolas", 16))
         self.forward_button.setStyleSheet("Color: rgb(4, 43, 94);" 
@@ -85,17 +94,22 @@ class MainWindow(QMainWindow):
         if not self.is_song_playing:
             self.player.load("Subhuman.mp3")
             self.player.play()
-            self.play_button.setText("Stop")
+            self.play_button.setText("Pause")
             self.is_song_playing = True
         else:
             self.player.stop()
-            self.play_button.setText("Play")
+            self.play_button.setText("Resume")
             self.is_song_playing = False
+    def on_click_stop(self):
+        self.player.stop()
+        self.is_song_playing = False
+        self.play_button.setText("Play")
     def on_click_forward(self):
         self.player.go_forward()
     def on_click_backward(self):
         self.player.go_back()
-
+    def handle_song_labels(self):
+        pass
 def main():
     app = QApplication([])
     window = MainWindow()

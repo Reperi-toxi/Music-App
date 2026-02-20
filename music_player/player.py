@@ -66,8 +66,8 @@ class MusicPlayer:
             self.is_paused = False
 
     def stop(self):
-        pygame.mixer.music.stop()
-        pygame.mixer.music.unload()
+        if self.is_playing:
+            pygame.mixer.music.stop()
         self.current_position = 0.0
         self.play_start_time = None
         self.is_playing = False
@@ -75,11 +75,13 @@ class MusicPlayer:
 
     def go_back(self, seconds=5):
         # Go back 5 seconds
-        self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
+        if self.is_playing:
+            self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
 
     def go_forward(self, seconds=5):
         # Go forward 5 seconds
-        self.play(self.get_position() + seconds)
+        if self.is_playing:
+            self.play(self.get_position() + seconds)
 
     def get_busy(self):
         return pygame.mixer.music.get_busy()
