@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QWidget)
+                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget)
 from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt
@@ -10,9 +10,10 @@ from PyQt6.QtCore import Qt
 class MainWindow(QMainWindow):
     width = 700 # size of main window
     height = 500
-    player = MusicPlayer("songs")
+
     def __init__(self):
         super().__init__()
+        self.player = MusicPlayer("songs")
         self.setWindowTitle("Music App")
         self.setWindowIcon(QIcon("Icon.png"))
         self.setGeometry(50, 50, self.width, self.height)
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget() # all 3 bellow will be part of central
         self.title_widget = QWidget()
         self.buttons_widget = QWidget()
-        self.music_list_widget = QWidget()
+        self.music_list_widget : QListWidget = QListWidget() # type hints to avoid warnings, annoying ah
 
         # Buttons labels and etc. ----------------------------------------------------
         self.play_button : QPushButton = QPushButton("Play", self.buttons_widget)
@@ -53,17 +54,19 @@ class MainWindow(QMainWindow):
         self.buttons_widget.setLayout(self.button_layout)
         self.music_list_widget.setLayout(self.music_list_layout)
 
-        self.init_ui()
-
-        self.song_widgets = []
+        self.music_list = self.player.music_files
         self.play_from_beginning = True
+        self.handle_song_labels()
+
+        self.init_ui()
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
 
         self.main_label.setFont(QFont("Consolas", 24))
         self.main_label.setStyleSheet("Color: rgb(4, 43, 94);"
-                            "Background-Color: rgb(209, 232, 235)")
+                                      "Background-Color: rgb(209, 232, 235);"
+                                      "Border-radius: 5px")
         self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # -- play button --------------------------------------------------------
         self.play_button.setGeometry(300, 200, 100, 100)
@@ -87,14 +90,42 @@ class MainWindow(QMainWindow):
         self.backward_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
         self.backward_button.clicked.connect(self.on_click_backward)
-        # -- Lists of songs widget ----------------------------------------------------------
-        self.music_list_widget.setStyleSheet("Background-color: Red;"
-                                             "Border: 3px solid white;"
-                                             "Border-Radius: 5px")
+        # -- List of songs widget ----------------------------------------------------------
+        self.music_list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: rgb(26, 25, 107);
+                color: White;
+                border: 1px solid white;
+                border-radius: 5px;
+                padding: 5px;
+                font-size: 14px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #444;
+            }
+            QListWidget::item:selected {
+                background-color: #0078d4;
+                color: white;
+            }
+            QListWidget:focus {
+                outline: none;
+            }
+            QListWidget::item:hover {
+                background-color: #b8b8e3;
+            }
+            QListWidget::item:selected:hover {
+                background-color: #2c2cf5;
+            }
+        """)
+        #self.music_list_widget.clicked.connect(self.on_click_song)
 
     def on_click_play(self):
         if self.play_from_beginning:
-            self.player.load("Subhuman.mp3")
+            current_song = self.music_list_widget.currentItem()
+            if current_song is None:
+                return
+            self.player.load(current_song.text())
             self.player.play()
             self.play_button.setText("Pause")
             self.play_from_beginning = False
@@ -114,8 +145,13 @@ class MainWindow(QMainWindow):
         self.player.go_forward()
     def on_click_backward(self):
         self.player.go_back()
+    def on_click_song(self):
+        self.player.stop()
+        self.play_from_beginning = True
+        self.play_button.setText("Play")
     def handle_song_labels(self):
-        pass
+        for song in self.music_list:
+            self.music_list_widget.addItem(song)
 def main():
     app = QApplication([])
     window = MainWindow()

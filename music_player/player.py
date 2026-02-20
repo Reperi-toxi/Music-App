@@ -28,7 +28,6 @@ class MusicPlayer:
         self.music_files = [
             f for f in os.listdir(self.folder) if f.endswith('.mp3')
         ]  # checks if the files are mp3
-
     def get_position(self):
         if not self.is_playing or self.is_paused or self.play_start_time is None:
             return self.current_position
