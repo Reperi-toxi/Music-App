@@ -1,9 +1,10 @@
+import sys
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QGridLayout, QWidget)
+                             QVBoxLayout, QHBoxLayout, QWidget)
 from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt
-import sys
+
 
 
 class MainWindow(QMainWindow):
@@ -16,28 +17,50 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon("Icon.png"))
         self.setGeometry(50, 50, self.width, self.height)
         self.setStyleSheet("Background-Color: rgb(8, 6, 59)")
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QHBoxLayout()
+        # Main blocks of app ---------------------------------------------------------
+        self.central_widget = QWidget() # all 3 bellow will be part of central
+        self.title_widget = QWidget()
+        self.buttons_widget = QWidget()
+        self.music_list_widget = QWidget()
 
-        self.play_button: QPushButton = QPushButton("Play", self)
-        self.forward_button: QPushButton = QPushButton("+5", self)
-        self.backward_button: QPushButton = QPushButton("-5", self)
+        # Buttons labels and etc. ----------------------------------------------------
+        self.play_button : QPushButton = QPushButton("Play", self.buttons_widget)
+        self.forward_button : QPushButton = QPushButton("+5", self.buttons_widget)
+        self.backward_button : QPushButton = QPushButton("-5", self.buttons_widget)
+        self.main_label = QLabel("Music App", self.title_widget)
+        # layouts -----------------------------------------------------------------
+        self.setCentralWidget(self.central_widget)
+        main_layout = QVBoxLayout()
+        title_layout = QHBoxLayout()
+        button_layout = QHBoxLayout()
+        music_list_layout = QVBoxLayout()
+        # Assign to layouts -----------------------------------------
+        # add widgets to layouts
+        main_layout.addWidget(self.title_widget, stretch=1)
+        main_layout.addWidget(self.buttons_widget, stretch=3)
+        main_layout.addWidget(self.music_list_widget, stretch=8)
 
-        layout.addWidget(self.backward_button)
-        layout.addWidget(self.play_button)
-        layout.addWidget(self.forward_button)
-        self.label = QLabel("Music App", self)
-        central_widget.setLayout(layout)
+        title_layout.addWidget(self.main_label)
+
+        button_layout.addWidget(self.backward_button)
+        button_layout.addWidget(self.play_button)
+        button_layout.addWidget(self.forward_button)
+        # assigning layouts to main blocks
+        self.central_widget.setLayout(main_layout)
+        self.title_widget.setLayout(title_layout)
+        self.buttons_widget.setLayout(button_layout)
+        self.music_list_widget.setLayout(music_list_layout)
 
         self.init_ui()
+        self.is_song_playing = False
+
     def init_ui(self):
-        # -- main label --------------------------------------------------------
-        self.label.setFont(QFont("Consolas", 24))
-        self.label.setGeometry(0, 0, self.width, 50)
-        self.label.setStyleSheet("Color: rgb(4, 43, 94);"
+        # -- main label/title widget --------------------------------------------------------
+
+        self.main_label.setFont(QFont("Consolas", 24))
+        self.main_label.setStyleSheet("Color: rgb(4, 43, 94);"
                             "Background-Color: rgb(209, 232, 235)")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # -- play button --------------------------------------------------------
         self.play_button.setGeometry(300, 200, 100, 100)
         self.play_button.setFont(QFont("Consolas", 16))
@@ -45,24 +68,34 @@ class MainWindow(QMainWindow):
                              "Background-Color: White;")
         self.play_button.clicked.connect(self.on_click_play)
         # -- forward button --------------------------------------------------------
-        self.forward_button.setGeometry(300, 200, 100, 100)
         self.forward_button.setFont(QFont("Consolas", 16))
         self.forward_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
         self.forward_button.clicked.connect(self.on_click_forward)
         # -- backward button --------------------------------------------------------
-        self.backward_button.setGeometry(300, 200, 100, 100)
         self.backward_button.setFont(QFont("Consolas", 16))
         self.backward_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
         self.backward_button.clicked.connect(self.on_click_backward)
+        # -- Lists of songs widget ----------------------------------------------------------
+        self.music_list_widget.setStyleSheet("Background-color: Red;"
+                                             "Border: 3px solid white;"
+                                             "Border-Radius: 5px")
     def on_click_play(self):
-        self.player.load("Subhuman.mp3")
-        self.player.play()
+        if not self.is_song_playing:
+            self.player.load("Subhuman.mp3")
+            self.player.play()
+            self.play_button.setText("Stop")
+            self.is_song_playing = True
+        else:
+            self.player.stop()
+            self.play_button.setText("Play")
+            self.is_song_playing = False
     def on_click_forward(self):
         self.player.go_forward()
     def on_click_backward(self):
         self.player.go_back()
+
 def main():
     app = QApplication([])
     window = MainWindow()

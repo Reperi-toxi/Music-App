@@ -67,6 +67,7 @@ class MusicPlayer:
 
     def stop(self):
         pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
         self.current_position = 0.0
         self.play_start_time = None
         self.is_playing = False
