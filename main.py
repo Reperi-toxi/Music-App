@@ -54,8 +54,9 @@ class MainWindow(QMainWindow):
         self.music_list_widget.setLayout(self.music_list_layout)
 
         self.init_ui()
-        self.is_song_playing = False
+
         self.song_widgets = []
+        self.play_from_beginning = True
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
@@ -90,19 +91,24 @@ class MainWindow(QMainWindow):
         self.music_list_widget.setStyleSheet("Background-color: Red;"
                                              "Border: 3px solid white;"
                                              "Border-Radius: 5px")
+
     def on_click_play(self):
-        if not self.is_song_playing:
+        if self.play_from_beginning:
             self.player.load("Subhuman.mp3")
             self.player.play()
             self.play_button.setText("Pause")
-            self.is_song_playing = True
+            self.play_from_beginning = False
         else:
-            self.player.stop()
-            self.play_button.setText("Resume")
-            self.is_song_playing = False
+            if self.player.is_paused:
+                self.player.resume()
+                self.play_button.setText("Pause")
+            else:
+                self.player.pause()
+                self.play_button.setText("Resume")
+
     def on_click_stop(self):
         self.player.stop()
-        self.is_song_playing = False
+        self.play_from_beginning = True
         self.play_button.setText("Play")
     def on_click_forward(self):
         self.player.go_forward()
