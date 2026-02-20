@@ -1,0 +1,85 @@
+import os
+import time
+import pygame
+
+# will potentially be modified further
+
+class MusicPlayer:
+    def __init__(self, folder="songs"):
+        self.folder = folder
+        self.music_files = []
+
+        self.current_position = 0.0
+        self.play_start_time = None  # wall clock time when play() was last called
+        self.is_paused = False
+        self.is_playing = False
+
+        try:
+            pygame.mixer.init()
+        except pygame.error as e:
+            print('error initializing!', e)
+
+        self._load_files()
+
+    def _load_files(self):
+        if not os.path.isdir(self.folder):
+            print(f" folder '{self.folder}' not found!")
+            return
+        self.music_files = [
+            f for f in os.listdir(self.folder) if f.endswith('.mp3')
+        ]  # checks if the files are mp3
+
+    def get_position(self):
+        """Returns the actual current playback position in seconds."""
+        if not self.is_playing or self.is_paused or self.play_start_time is None:
+            return self.current_position
+        return self.current_position + (time.time() - self.play_start_time)
+
+    # controls
+    def load(self, music_file_name):
+        music_path = os.path.join(self.folder, music_file_name)
+        pygame.mixer.music.load(music_path)
+
+        self.current_position = 0.0
+        self.play_start_time = None
+        self.is_paused = False
+        self.is_playing = False
+
+    def play(self, position=None):
+        if position is not None:
+            self.current_position = position
+        pygame.mixer.music.play(start=self.current_position)
+        self.play_start_time = time.time()
+        self.is_playing = True
+        self.is_paused = False
+
+    def pause(self):
+        if self.is_playing and not self.is_paused:
+            pygame.mixer.music.pause()
+            self.current_position = self.get_position()  # freeze at current moment
+            self.play_start_time = None
+            self.is_paused = True
+
+    def resume(self):
+        if self.is_paused:
+            pygame.mixer.music.unpause()
+            self.play_start_time = time.time()  # reset wall-clock from now
+            self.is_paused = False
+
+    def stop(self):
+        pygame.mixer.music.stop()
+        self.current_position = 0.0
+        self.play_start_time = None
+        self.is_playing = False
+        self.is_paused = False
+
+    def seek_back(self, seconds=5):
+        # Go back 5 seconds
+        self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
+
+    def seek_forward(self, seconds=5):
+        # Go forward 5 seconds
+        self.play(self.get_position() + seconds)
+
+    def get_busy(self):
+        return pygame.mixer.music.get_busy()
