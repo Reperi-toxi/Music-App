@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt, QTimer
 
 class MainWindow(QMainWindow):
     width = 700 # size of main window
-    height = 500
+    height = 600
 
     def __init__(self):
         super().__init__()
@@ -18,8 +18,9 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("Background-Color: rgb(8, 6, 59)")
         # Main blocks of app ---------------------------------------------------------
         self.timer: QTimer = QTimer()
-        self.central_widget = QWidget() # all 3 bellow will be part of central
+        self.central_widget = QWidget() # all bellow will be part of central
         self.title_widget = QWidget()
+        self.track_container_widget = QWidget()
         self.buttons_widget = QWidget()
         self.volume_container_widget = QWidget()
         self.music_list_widget : QListWidget = QListWidget() # type hints to avoid warnings, annoying ah
@@ -28,7 +29,13 @@ class MainWindow(QMainWindow):
         self.stop_button: QPushButton = QPushButton("Stop", self.buttons_widget)
         self.forward_button : QPushButton = QPushButton("+5", self.buttons_widget)
         self.backward_button : QPushButton = QPushButton("-5", self.buttons_widget)
+
         self.main_label = QLabel("Music Player", self.title_widget)
+
+        self.track_slider: QSlider = QSlider()
+        self.current_time_label = QLabel("0:00", self.track_container_widget)
+        self.total_time_label = QLabel("0:00", self.track_container_widget)
+
         self.volume_slider: QSlider = QSlider()
         self.low_volume_label = QLabel("🔈", self.volume_container_widget)
         self.high_volume_label = QLabel("🔊", self.volume_container_widget)
@@ -36,17 +43,23 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout()
         self.title_layout = QHBoxLayout()
+        self.track_layout = QHBoxLayout()
         self.button_layout = QHBoxLayout()
         self.volume_layout = QHBoxLayout()
         self.music_list_layout = QVBoxLayout()
         # Assign to layouts -----------------------------------------
         # add widgets to layouts
         self.main_layout.addWidget(self.title_widget, stretch=1)
+        self.main_layout.addWidget(self.track_container_widget, stretch= 2)
         self.main_layout.addWidget(self.buttons_widget, stretch=3)
         self.main_layout.addWidget(self.volume_container_widget, stretch = 2)
         self.main_layout.addWidget(self.music_list_widget, stretch=8)
 
         self.title_layout.addWidget(self.main_label)
+
+        self.track_layout.addWidget(self.current_time_label)
+        self.track_layout.addWidget(self.track_slider)
+        self.track_layout.addWidget(self.total_time_label)
 
         self.button_layout.addWidget(self.backward_button)
         self.button_layout.addWidget(self.play_button)
@@ -59,6 +72,7 @@ class MainWindow(QMainWindow):
         # assigning layouts to main blocks
         self.central_widget.setLayout(self.main_layout)
         self.title_widget.setLayout(self.title_layout)
+        self.track_container_widget.setLayout(self.track_layout)
         self.buttons_widget.setLayout(self.button_layout)
         self.volume_container_widget.setLayout(self.volume_layout)
         self.music_list_widget.setLayout(self.music_list_layout)
@@ -78,7 +92,33 @@ class MainWindow(QMainWindow):
                                       "Background-Color: rgb(209, 232, 235);"
                                       "Border-radius: 5px")
         self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # -- Track ---------------------------------------------------------
+        self.track_layout.setSpacing(20)
+        self.current_time_label.setFont(QFont("", 20))
+        self.total_time_label.setFont(QFont("", 20))
 
+        self.track_slider.setOrientation(Qt.Orientation.Horizontal)
+        self.track_slider.setRange(0, 100)
+        self.track_slider.setValue(0)
+        self.track_slider.setStyleSheet("""
+                    QSlider::groove:horizontal {
+                        height: 6px;
+                        background: rgb(26, 25, 107);
+                        border-radius: 3px;
+                        border: 1px solid white;
+                    }
+                    QSlider::handle:horizontal {
+                        background: white;
+                        width: 16px;
+                        height: 16px;
+                        margin: -5px 0;
+                        border-radius: 8px;
+                    }
+                    QSlider::sub-page:horizontal {
+                        background: rgb(209, 232, 235);
+                        border-radius: 3px;
+                    }
+                """)
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet("""
             QPushButton {
@@ -104,12 +144,12 @@ class MainWindow(QMainWindow):
         self.forward_button.clicked.connect(self.on_click_forward)
         # -- Volume -----------------------------------------------------------------------
         self.volume_layout.setSpacing(20)
-        self.low_volume_label.setFont(QFont("", 28))
-        self.high_volume_label.setFont(QFont("", 28))
+        self.low_volume_label.setFont(QFont("", 20))
+        self.high_volume_label.setFont(QFont("", 20))
 
         self.volume_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.volume_slider.setRange(0, 100)
-        self.volume_slider.setValue(100)
+        self.volume_slider.setRange(0, 50)
+        self.volume_slider.setValue(50)
         self.volume_slider.setStyleSheet("""
             QSlider::groove:horizontal {
                 height: 6px;
@@ -130,7 +170,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 100))
+        self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 50))
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet("""
             QListWidget {
@@ -164,11 +204,19 @@ class MainWindow(QMainWindow):
         #self.music_list_widget.clicked.connect(self.on_click_song)
     def set_timer(self):
         self.timer.setInterval(200)  # checks every 0.2 seconds
-        self.timer.timeout.connect(self.check_song_end)
+        self.timer.timeout.connect(self.check_song_end) # check whether song has ended
+        self.timer.timeout.connect(self.update_time_label) # update current time label
         self.timer.start()
 
+    def update_time_label(self):
+        pos_seconds = self.player.get_position() or 0.0
+        minutes = int(pos_seconds // 60)
+        seconds = int(pos_seconds % 60)
+        time_str = f"{minutes}:{seconds:02}" # formatting to minutes:seconds, :02 to maek it two digit
+        self.current_time_label.setText(time_str)
+
     def check_song_end(self):
-        if not self.player.get_busy() and self.player.is_playing:
+        if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
             # song ended naturally
             self.player.stop()
             self.play_from_beginning = True
@@ -176,14 +224,21 @@ class MainWindow(QMainWindow):
             self.main_label.setText("Music Player")
     def on_click_play(self):
         if self.play_from_beginning:
-
             current_song = self.music_list_widget.currentItem()
             if current_song is None:
                 return
             self.main_label.setText(current_song.text().removesuffix(".mp3"))
             self.player.load(current_song.text() + ".mp3")
             self.player.play()
+            print(current_song.text())
+            pos_seconds = self.player.get_song_length(current_song.text() + ".mp3") or 0.0
+            minutes = int(pos_seconds // 60)
+            seconds = int(pos_seconds % 60)
+
+            time_str = f"{minutes}:{seconds:02}"
+
             self.play_button.setText("Pause")
+            self.total_time_label.setText(time_str)
             self.play_from_beginning = False
         else:
             if self.player.is_paused:
@@ -197,6 +252,7 @@ class MainWindow(QMainWindow):
         self.play_from_beginning = True
         self.play_button.setText("Play")
         self.main_label.setText("Music Player")
+        self.total_time_label.setText("0:00")
     def on_click_forward(self):
         self.player.go_forward()
     def on_click_backward(self):

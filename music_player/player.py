@@ -3,8 +3,6 @@ import time
 import pygame
 from mutagen.mp3 import MP3
 
-# will potentially be modified further
-
 class MusicPlayer:
     def __init__(self, folder):
         self.folder = folder
