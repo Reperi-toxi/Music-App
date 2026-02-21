@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
-
         self.main_label.setFont(QFont("Consolas", 24))
         self.main_label.setStyleSheet("Color: rgb(4, 43, 94);"
                                       "Background-Color: rgb(209, 232, 235);"
@@ -98,7 +97,7 @@ class MainWindow(QMainWindow):
         self.total_time_label.setFont(QFont("", 20))
 
         self.track_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.track_slider.setRange(0, 100)
+        self.track_slider.setRange(0, 100) # arbitrary, updated later with timer
         self.track_slider.setValue(0)
         self.track_slider.setStyleSheet("""
                     QSlider::groove:horizontal {
@@ -206,6 +205,7 @@ class MainWindow(QMainWindow):
         self.timer.setInterval(200)  # checks every 0.2 seconds
         self.timer.timeout.connect(self.check_song_end) # check whether song has ended
         self.timer.timeout.connect(self.update_time_label) # update current time label
+        self.timer.timeout.connect(self.update_track_slider)
         self.timer.start()
 
     def update_time_label(self):
@@ -214,7 +214,8 @@ class MainWindow(QMainWindow):
         seconds = int(pos_seconds % 60)
         time_str = f"{minutes}:{seconds:02}" # formatting to minutes:seconds, :02 to maek it two digit
         self.current_time_label.setText(time_str)
-
+    def update_track_slider(self):
+        self.track_slider.setValue(int(self.player.get_position()))
     def check_song_end(self):
         if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
             # song ended naturally
@@ -238,6 +239,7 @@ class MainWindow(QMainWindow):
 
             self.play_button.setText("Pause")
             self.total_time_label.setText(time_str)
+            self.track_slider.setMaximum(int(self.player.get_song_length(current_song.text() + ".mp3")))
             self.play_from_beginning = False
         else:
             if self.player.is_paused:
@@ -267,6 +269,8 @@ class MainWindow(QMainWindow):
         self.play_button.setText("Play")
     def on_change_volume(self, volume):
         self.player.set_volume(volume)
+    def on_change_track(self):
+        self.player.play()
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))
