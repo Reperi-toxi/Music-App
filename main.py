@@ -118,6 +118,7 @@ class MainWindow(QMainWindow):
                         border-radius: 3px;
                     }
                 """)
+        self.track_slider.valueChanged.connect(lambda value: self.on_change_track(value))
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet("""
             QPushButton {
@@ -215,7 +216,9 @@ class MainWindow(QMainWindow):
         time_str = f"{minutes}:{seconds:02}" # formatting to minutes:seconds, :02 to maek it two digit
         self.current_time_label.setText(time_str)
     def update_track_slider(self):
+        self.track_slider.blockSignals(True)
         self.track_slider.setValue(int(self.player.get_position()))
+        self.track_slider.blockSignals(False)
     def check_song_end(self):
         if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
             # song ended naturally
@@ -269,8 +272,8 @@ class MainWindow(QMainWindow):
         self.play_button.setText("Play")
     def on_change_volume(self, volume):
         self.player.set_volume(volume)
-    def on_change_track(self):
-        self.player.play()
+    def on_change_track(self, value):
+        self.player.play(position=value)
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))
