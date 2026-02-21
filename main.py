@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
                              QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider)
 from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 
 class MainWindow(QMainWindow):
     width = 700 # size of main window
@@ -17,6 +17,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(50, 50, self.width, self.height)
         self.setStyleSheet("Background-Color: rgb(8, 6, 59)")
         # Main blocks of app ---------------------------------------------------------
+        self.timer: QTimer = QTimer()
         self.central_widget = QWidget() # all 3 bellow will be part of central
         self.title_widget = QWidget()
         self.buttons_widget = QWidget()
@@ -67,6 +68,7 @@ class MainWindow(QMainWindow):
         self.handle_song_labels()
 
         self.init_ui()
+        self.set_timer()
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
@@ -107,6 +109,7 @@ class MainWindow(QMainWindow):
 
         self.volume_slider.setOrientation(Qt.Orientation.Horizontal)
         self.volume_slider.setRange(0, 100)
+        self.volume_slider.setValue(100)
         self.volume_slider.setStyleSheet("""
             QSlider::groove:horizontal {
                 height: 6px;
@@ -127,7 +130,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        self.volume_slider.valueChanged.connect(lambda: self.on_change_volume(self.volume_slider.value() / 100))
+        self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 100))
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet("""
             QListWidget {
@@ -159,7 +162,18 @@ class MainWindow(QMainWindow):
             }
         """)
         #self.music_list_widget.clicked.connect(self.on_click_song)
+    def set_timer(self):
+        self.timer.setInterval(200)  # checks every 0.2 seconds
+        self.timer.timeout.connect(self.check_song_end)
+        self.timer.start()
 
+    def check_song_end(self):
+        if not self.player.get_busy() and self.player.is_playing:
+            # song ended naturally
+            self.player.stop()
+            self.play_from_beginning = True
+            self.play_button.setText("Play")
+            self.main_label.setText("Music Player")
     def on_click_play(self):
         if self.play_from_beginning:
 

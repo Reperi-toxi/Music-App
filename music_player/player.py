@@ -1,6 +1,7 @@
 import os
 import time
 import pygame
+from mutagen.mp3 import MP3
 
 # will potentially be modified further
 
@@ -8,11 +9,11 @@ class MusicPlayer:
     def __init__(self, folder):
         self.folder = folder
         self.music_files = []
-
         self.current_position = 0.0
         self.play_start_time = None  # wall clock time when play() was last called
         self.is_paused = False
         self.is_playing = False
+        self.current_song = None
 
         try:
             pygame.mixer.init()
@@ -38,11 +39,16 @@ class MusicPlayer:
         music_path = os.path.join(self.folder, music_file_name)
         pygame.mixer.music.load(music_path)
 
+        self.current_song = music_file_name
         self.current_position = 0.0
         self.play_start_time = None
         self.is_paused = False
         self.is_playing = False
 
+    def get_song_length(self, music_file_name):
+        music_path = os.path.join(self.folder, music_file_name)
+        audio = MP3(music_path)
+        return audio.info.length
     def play(self, position=None): # play the loaded music
         if position is not None:
             self.current_position = position
@@ -67,6 +73,7 @@ class MusicPlayer:
     def stop(self):
         if self.is_playing:
             pygame.mixer.music.stop()
+        self.current_song = None
         self.current_position = 0.0
         self.play_start_time = None
         self.is_playing = False
@@ -77,10 +84,10 @@ class MusicPlayer:
         if self.is_playing:
             self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
 
-    def go_forward(self, seconds=5):
+    def go_forward(self, seconds=25):
         # Go forward 5 seconds
         if self.is_playing:
-            self.play(self.get_position() + seconds)
+            self.play(min(self.get_song_length(self.current_song),self.get_position() + seconds))
 
     def set_volume(self, volume: float):
         if self.is_playing:
