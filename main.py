@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget)
+                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider)
 from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt
@@ -20,6 +20,7 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget() # all 3 bellow will be part of central
         self.title_widget = QWidget()
         self.buttons_widget = QWidget()
+        self.volume_container_widget = QWidget()
         self.music_list_widget : QListWidget = QListWidget() # type hints to avoid warnings, annoying ah
         # Buttons labels and etc. ----------------------------------------------------
         self.play_button : QPushButton = QPushButton("Play", self.buttons_widget)
@@ -27,16 +28,21 @@ class MainWindow(QMainWindow):
         self.forward_button : QPushButton = QPushButton("+5", self.buttons_widget)
         self.backward_button : QPushButton = QPushButton("-5", self.buttons_widget)
         self.main_label = QLabel("Music Player", self.title_widget)
+        self.volume_slider: QSlider = QSlider()
+        self.low_volume_label = QLabel("🔈", self.volume_container_widget)
+        self.high_volume_label = QLabel("🔊", self.volume_container_widget)
         # layouts -----------------------------------------------------------------
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout()
         self.title_layout = QHBoxLayout()
         self.button_layout = QHBoxLayout()
+        self.volume_layout = QHBoxLayout()
         self.music_list_layout = QVBoxLayout()
         # Assign to layouts -----------------------------------------
         # add widgets to layouts
         self.main_layout.addWidget(self.title_widget, stretch=1)
         self.main_layout.addWidget(self.buttons_widget, stretch=3)
+        self.main_layout.addWidget(self.volume_container_widget, stretch = 2)
         self.main_layout.addWidget(self.music_list_widget, stretch=8)
 
         self.title_layout.addWidget(self.main_label)
@@ -45,10 +51,15 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.play_button)
         self.button_layout.addWidget(self.stop_button)
         self.button_layout.addWidget(self.forward_button)
+
+        self.volume_layout.addWidget(self.low_volume_label)
+        self.volume_layout.addWidget(self.volume_slider)
+        self.volume_layout.addWidget(self.high_volume_label)
         # assigning layouts to main blocks
         self.central_widget.setLayout(self.main_layout)
         self.title_widget.setLayout(self.title_layout)
         self.buttons_widget.setLayout(self.button_layout)
+        self.volume_container_widget.setLayout(self.volume_layout)
         self.music_list_widget.setLayout(self.music_list_layout)
 
         self.music_list = self.player.music_files
@@ -89,6 +100,34 @@ class MainWindow(QMainWindow):
         self.play_button.clicked.connect(self.on_click_play)
         self.stop_button.clicked.connect(self.on_click_stop)
         self.forward_button.clicked.connect(self.on_click_forward)
+        # -- Volume -----------------------------------------------------------------------
+        self.volume_layout.setSpacing(20)
+        self.low_volume_label.setFont(QFont("", 28))
+        self.high_volume_label.setFont(QFont("", 28))
+
+        self.volume_slider.setOrientation(Qt.Orientation.Horizontal)
+        self.volume_slider.setRange(0, 100)
+        self.volume_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                height: 6px;
+                background: rgb(26, 25, 107);
+                border-radius: 3px;
+                border: 1px solid white;
+            }
+            QSlider::handle:horizontal {
+                background: white;
+                width: 16px;
+                height: 16px;
+                margin: -5px 0;
+                border-radius: 8px;
+            }
+            QSlider::sub-page:horizontal {
+                background: rgb(209, 232, 235);
+                border-radius: 3px;
+            }
+        """)
+
+        self.volume_slider.valueChanged.connect(lambda: self.on_change_volume(self.volume_slider.value() / 100))
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet("""
             QListWidget {
@@ -139,7 +178,6 @@ class MainWindow(QMainWindow):
             else:
                 self.player.pause()
                 self.play_button.setText("Resume")
-
     def on_click_stop(self):
         self.player.stop()
         self.play_from_beginning = True
@@ -153,7 +191,8 @@ class MainWindow(QMainWindow):
         self.player.stop()
         self.play_from_beginning = True
         self.play_button.setText("Play")
-
+    def on_change_volume(self, volume):
+        self.player.set_volume(volume)
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))

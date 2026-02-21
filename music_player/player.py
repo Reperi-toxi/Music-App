@@ -82,5 +82,8 @@ class MusicPlayer:
         if self.is_playing:
             self.play(self.get_position() + seconds)
 
+    def set_volume(self, volume: float):
+        if self.is_playing:
+            pygame.mixer.music.set_volume(volume)
     def get_busy(self):
         return pygame.mixer.music.get_busy()
