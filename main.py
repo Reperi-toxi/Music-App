@@ -5,8 +5,6 @@ from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt
 
-
-
 class MainWindow(QMainWindow):
     width = 700 # size of main window
     height = 500
@@ -23,7 +21,6 @@ class MainWindow(QMainWindow):
         self.title_widget = QWidget()
         self.buttons_widget = QWidget()
         self.music_list_widget : QListWidget = QListWidget() # type hints to avoid warnings, annoying ah
-
         # Buttons labels and etc. ----------------------------------------------------
         self.play_button : QPushButton = QPushButton("Play", self.buttons_widget)
         self.stop_button: QPushButton = QPushButton("Stop", self.buttons_widget)
@@ -69,13 +66,11 @@ class MainWindow(QMainWindow):
                                       "Border-radius: 5px")
         self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # -- play button --------------------------------------------------------
-        self.play_button.setGeometry(300, 200, 100, 100)
         self.play_button.setFont(QFont("Consolas", 16))
         self.play_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
         self.play_button.clicked.connect(self.on_click_play)
         # -- Stop button --------------------------------------------------------
-        self.stop_button.setGeometry(300, 200, 100, 100)
         self.stop_button.setFont(QFont("Consolas", 16))
         self.stop_button.setStyleSheet("Color: rgb(4, 43, 94);" 
                              "Background-Color: White;")
@@ -112,6 +107,7 @@ class MainWindow(QMainWindow):
                 outline: none;
             }
             QListWidget::item:hover {
+                Color: rgb(4, 43, 94);
                 background-color: #b8b8e3;
             }
             QListWidget::item:selected:hover {
@@ -125,6 +121,7 @@ class MainWindow(QMainWindow):
             current_song = self.music_list_widget.currentItem()
             if current_song is None:
                 return
+            self.main_label.setText(current_song.text().removesuffix(".mp3"))
             self.player.load(current_song.text())
             self.player.play()
             self.play_button.setText("Pause")
@@ -149,6 +146,7 @@ class MainWindow(QMainWindow):
         self.player.stop()
         self.play_from_beginning = True
         self.play_button.setText("Play")
+
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song)
