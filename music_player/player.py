@@ -82,7 +82,7 @@ class MusicPlayer:
         if self.is_playing:
             self.play(max(0, self.get_position() - seconds))  # max() to avoid negative numbers
 
-    def go_forward(self, seconds=25):
+    def go_forward(self, seconds=5):
         # Go forward 5 seconds
         if self.is_playing:
             self.play(min(self.get_song_length(self.current_song),self.get_position() + seconds))

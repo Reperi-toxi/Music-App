@@ -230,11 +230,10 @@ class MainWindow(QMainWindow):
             self.main_label.setText(current_song.text().removesuffix(".mp3"))
             self.player.load(current_song.text() + ".mp3")
             self.player.play()
-            print(current_song.text())
+
             pos_seconds = self.player.get_song_length(current_song.text() + ".mp3") or 0.0
             minutes = int(pos_seconds // 60)
             seconds = int(pos_seconds % 60)
-
             time_str = f"{minutes}:{seconds:02}"
 
             self.play_button.setText("Pause")
@@ -254,8 +253,13 @@ class MainWindow(QMainWindow):
         self.main_label.setText("Music Player")
         self.total_time_label.setText("0:00")
     def on_click_forward(self):
+        if self.player.is_paused:
+            self.play_button.setText("Pause")
         self.player.go_forward()
+
     def on_click_backward(self):
+        if self.player.is_paused:
+            self.play_button.setText("Pause")
         self.player.go_back()
     def on_click_song(self):
         self.player.stop()
