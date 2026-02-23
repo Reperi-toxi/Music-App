@@ -1,9 +1,11 @@
 import sys
+from music_player import MusicPlayer
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
                              QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider)
-from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
+from styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
+                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE)
 
 class MainWindow(QMainWindow):
     width = 700  # size of main window
@@ -88,9 +90,7 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
         self.main_label.setFont(QFont("Consolas", 24))
-        self.main_label.setStyleSheet("Color: rgb(4, 43, 94);"
-                                      "Background-Color: rgb(209, 232, 235);"
-                                      "Border-radius: 5px")
+        self.main_label.setStyleSheet(MAIN_LABEL_STYLE)
         self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # -- Track ---------------------------------------------------------
         self.track_layout.setSpacing(20)
@@ -100,44 +100,12 @@ class MainWindow(QMainWindow):
         self.track_slider.setOrientation(Qt.Orientation.Horizontal)
         self.track_slider.setRange(0, 100)  # arbitrary, updated later with timer
         self.track_slider.setValue(0)
-        self.track_slider.setStyleSheet("""
-                    QSlider::groove:horizontal {
-                        height: 6px;
-                        background: rgb(26, 25, 107);
-                        border-radius: 3px;
-                        border: 1px solid white;
-                    }
-                    QSlider::handle:horizontal {
-                        background: white;
-                        width: 16px;
-                        height: 16px;
-                        margin: -5px 0;
-                        border-radius: 8px;
-                    }
-                    QSlider::sub-page:horizontal {
-                        background: rgb(209, 232, 235);
-                        border-radius: 3px;
-                    }
-                """)
+        self.track_slider.setStyleSheet(TRACK_SLIDER_STYLE)
 
         self.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
         self.track_slider.sliderReleased.connect(self.on_track_slider_released)
         # -- Buttons --------------------------------------------------------
-        self.buttons_widget.setStyleSheet("""
-            QPushButton {
-                font-family: consolas;
-                font-size: 16pt;
-                color: rgb(4, 43, 94);
-                background-color: white;
-            }
-            QPushButton:hover {
-                background-color: rgb(230, 230, 230);
-            }
-            QPushButton:pressed {
-                background-color: rgb(4, 43, 94);
-                color: white;
-            }
-        """)
+        self.buttons_widget.setStyleSheet(BUTTON_STYLE)
         # -- Button functionalities ------------------------------------------------------
         self.backward_button.clicked.connect(self.on_click_backward)
         self.play_button.clicked.connect(self.on_click_play)
@@ -151,78 +119,10 @@ class MainWindow(QMainWindow):
         self.volume_slider.setOrientation(Qt.Orientation.Horizontal)
         self.volume_slider.setRange(0, 50)
         self.volume_slider.setValue(50)
-        self.volume_slider.setStyleSheet("""
-            QSlider::groove:horizontal {
-                height: 6px;
-                background: rgb(26, 25, 107);
-                border-radius: 3px;
-                border: 1px solid white;
-            }
-            QSlider::handle:horizontal {
-                background: white;
-                width: 16px;
-                height: 16px;
-                margin: -5px 0;
-                border-radius: 8px;
-            }
-            QSlider::sub-page:horizontal {
-                background: rgb(209, 232, 235);
-                border-radius: 3px;
-            }
-        """)
+        self.volume_slider.setStyleSheet(VOLUME_SLIDER_STYLE)
         self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 50))
         # -- List of songs widget ----------------------------------------------------------
-        self.music_list_widget.setStyleSheet("""
-            QListWidget {
-                background-color: rgb(26, 25, 107);
-                color: White;
-                border: 1px solid white;
-                border-radius: 5px;
-                padding: 5px;
-                font-size: 14px;
-            }
-            QListWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #444;
-            }
-            QListWidget::item:selected {
-                background-color: #0078d4;
-                color: white;
-            }
-            QListWidget:focus {
-                outline: none;
-            }
-            QListWidget::item:hover {
-                Color: rgb(4, 43, 94);
-                background-color: #b8b8e3;
-            }
-            QListWidget::item:selected:hover {
-                Color: White;
-                background-color: #2c2cf5;
-            }
-            QScrollBar:vertical {
-                background: rgb(26, 25, 107);
-                width: 8px;
-                border-radius: 4px;
-            }
-            QScrollBar::handle:vertical {
-                background: rgb(209, 232, 235);
-                border-radius: 4px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: white;
-            }
-            QScrollBar::add-line:vertical {
-                height: 0px;
-            }
-            QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
-            }
-        """)
+        self.music_list_widget.setStyleSheet(LIST_WIDGET_STYLE)
         # self.music_list_widget.clicked.connect(self.on_click_song)
 
     def set_timer(self):
