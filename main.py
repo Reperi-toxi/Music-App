@@ -4,7 +4,6 @@ from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
 from music_player import MusicPlayer
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
-import time
 
 class MainWindow(QMainWindow):
     width = 700  # size of main window
@@ -123,7 +122,6 @@ class MainWindow(QMainWindow):
 
         self.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
         self.track_slider.sliderReleased.connect(self.on_track_slider_released)
-        #self.track_slider.valueChanged.connect(lambda value: self.on_change_track(value))
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet("""
             QPushButton {
@@ -132,11 +130,9 @@ class MainWindow(QMainWindow):
                 color: rgb(4, 43, 94);
                 background-color: white;
             }
-
             QPushButton:hover {
                 background-color: rgb(230, 230, 230);
             }
-
             QPushButton:pressed {
                 background-color: rgb(4, 43, 94);
                 color: white;
@@ -204,6 +200,28 @@ class MainWindow(QMainWindow):
                 Color: White;
                 background-color: #2c2cf5;
             }
+            QScrollBar:vertical {
+                background: rgb(26, 25, 107);
+                width: 8px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgb(209, 232, 235);
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: white;
+            }
+            QScrollBar::add-line:vertical {
+                height: 0px;
+            }
+            QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
         """)
         # self.music_list_widget.clicked.connect(self.on_click_song)
 
@@ -212,7 +230,6 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.check_song_end)  # check whether song has ended
         self.timer.timeout.connect(self.update_time_label)  # update current time label
         self.timer.timeout.connect(self.update_track_slider)
-        #self.timer.timeout.connect(lambda: print(self.is_dragging)) # debugging delete after!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.timer.start()
 
     def update_time_label(self):
@@ -224,12 +241,10 @@ class MainWindow(QMainWindow):
 
     # -- handling track slider -----------------------------------
     def on_track_slider_pressed(self):
-        print("Pressed") # debug
         self.is_dragging = True
         self.player.pause()
 
     def on_track_slider_released(self):
-        print("Released") # Debug
         self.is_dragging = False
         self.on_change_track()
 
