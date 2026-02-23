@@ -120,9 +120,10 @@ class MainWindow(QMainWindow):
                         border-radius: 3px;
                     }
                 """)
-        self.track_slider.valueChanged.connect(lambda value: self.on_change_track(value))
-        #self.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
-        #self.track_slider.sliderReleased.connect(self.on_track_slider_released)
+
+        self.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
+        self.track_slider.sliderReleased.connect(self.on_track_slider_released)
+        #self.track_slider.valueChanged.connect(lambda value: self.on_change_track(value))
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet("""
             QPushButton {
@@ -211,6 +212,7 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.check_song_end)  # check whether song has ended
         self.timer.timeout.connect(self.update_time_label)  # update current time label
         self.timer.timeout.connect(self.update_track_slider)
+        #self.timer.timeout.connect(lambda: print(self.is_dragging)) # debugging delete after!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.timer.start()
 
     def update_time_label(self):
@@ -222,14 +224,17 @@ class MainWindow(QMainWindow):
 
     # -- handling track slider -----------------------------------
     def on_track_slider_pressed(self):
+        print("Pressed") # debug
         self.is_dragging = True
+        self.player.pause()
+
     def on_track_slider_released(self):
-        QTimer.singleShot(200, self.after_track_slider_released)
-    def after_track_slider_released(self):
-        self.player.play(position=self.track_slider.value())
+        print("Released") # Debug
         self.is_dragging = False
+        self.on_change_track()
+
     def update_track_slider(self):
-        if self.is_dragging:
+        if not self.is_dragging:
             self.track_slider.blockSignals(True)
             self.track_slider.setValue(int(self.player.get_position()))
             self.track_slider.blockSignals(False)
@@ -237,10 +242,9 @@ class MainWindow(QMainWindow):
     def check_song_end(self):
         if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
             # song ended naturally
-            self.player.stop()
+            self.player.pause()
             self.play_from_beginning = True
             self.play_button.setText("Play")
-            self.main_label.setText("Music Player")
 
     def on_click_play(self):
         if self.play_from_beginning:
@@ -293,9 +297,10 @@ class MainWindow(QMainWindow):
     def on_change_volume(self, volume):
         self.player.set_volume(volume)
 
-    def on_change_track(self, value):
-        time.sleep(0.2)
-        self.player.play(position=value)
+    def on_change_track(self):
+        if self.player.is_playing and not self.is_dragging:
+            self.player.play(position=self.track_slider.value())
+            self.play_button.setText("Pause")
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))
