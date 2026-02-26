@@ -1,11 +1,11 @@
 import sys
 from music_player import MusicPlayer
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider)
+                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider, QCheckBox)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
 from styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
-                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE)
+                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE, CHECKBOX_STYLE)
 
 class MainWindow(QMainWindow):
     width = 700  # size of main window
@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
         self.title_widget = QWidget()
         self.track_container_widget = QWidget()
         self.buttons_widget = QWidget()
+        self.extras_widget = QWidget()
         self.volume_container_widget = QWidget()
         self.music_list_widget: QListWidget = QListWidget()  # type hints to avoid warnings, annoying ah
         # Buttons labels and etc. ----------------------------------------------------
@@ -31,6 +32,8 @@ class MainWindow(QMainWindow):
         self.stop_button: QPushButton = QPushButton("Stop", self.buttons_widget)
         self.forward_button: QPushButton = QPushButton("+5", self.buttons_widget)
         self.backward_button: QPushButton = QPushButton("-5", self.buttons_widget)
+
+        self.auto_replay_checkbox: QCheckBox = QCheckBox("Auto-Replay ⟲", self.extras_widget)
 
         self.main_label = QLabel("Music Player", self.title_widget)
 
@@ -47,13 +50,16 @@ class MainWindow(QMainWindow):
         self.title_layout = QHBoxLayout()
         self.track_layout = QHBoxLayout()
         self.button_layout = QHBoxLayout()
+        self.extras_layout = QHBoxLayout()
         self.volume_layout = QHBoxLayout()
-        self.music_list_layout = QVBoxLayout()
+
         # Assign to layouts ------------------------------------------------
         # add widgets to layouts
+
         self.main_layout.addWidget(self.title_widget, stretch=1)
         self.main_layout.addWidget(self.track_container_widget, stretch=2)
         self.main_layout.addWidget(self.buttons_widget, stretch=3)
+        self.main_layout.addWidget(self.extras_widget, stretch=2)
         self.main_layout.addWidget(self.volume_container_widget, stretch=2)
         self.main_layout.addWidget(self.music_list_widget, stretch=8)
 
@@ -68,6 +74,8 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.stop_button)
         self.button_layout.addWidget(self.forward_button)
 
+        self.extras_layout.addWidget(self.auto_replay_checkbox, alignment=Qt.AlignmentFlag.AlignCenter)
+
         self.volume_layout.addWidget(self.low_volume_label)
         self.volume_layout.addWidget(self.volume_slider)
         self.volume_layout.addWidget(self.high_volume_label)
@@ -76,8 +84,8 @@ class MainWindow(QMainWindow):
         self.title_widget.setLayout(self.title_layout)
         self.track_container_widget.setLayout(self.track_layout)
         self.buttons_widget.setLayout(self.button_layout)
+        self.extras_widget.setLayout(self.extras_layout)
         self.volume_container_widget.setLayout(self.volume_layout)
-        self.music_list_widget.setLayout(self.music_list_layout)
 
         self.music_list = self.player.music_files
         self.play_from_beginning = True
@@ -111,6 +119,8 @@ class MainWindow(QMainWindow):
         self.play_button.clicked.connect(self.on_click_play)
         self.stop_button.clicked.connect(self.on_click_stop)
         self.forward_button.clicked.connect(self.on_click_forward)
+        # .. Extras ---------------------------------------------------
+        self.extras_widget.setStyleSheet(CHECKBOX_STYLE)
         # -- Volume -----------------------------------------------------------------------
         self.volume_layout.setSpacing(20)
         self.low_volume_label.setFont(QFont("", 20))
@@ -157,9 +167,15 @@ class MainWindow(QMainWindow):
     def check_song_end(self):
         if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
             # song ended naturally
-            self.player.pause()
-            self.play_from_beginning = True
-            self.play_button.setText("Play")
+            if self.auto_replay_checkbox.isChecked():
+                current_song = self.music_list_widget.currentItem()
+                if current_song:
+                    self.player.load(current_song.text() + ".mp3")
+                    self.player.play()
+            else:
+                self.player.pause()
+                self.play_from_beginning = True
+                self.play_button.setText("Play")
 
     def on_click_play(self):
         if self.play_from_beginning:

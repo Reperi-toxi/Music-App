@@ -21,7 +21,40 @@ TRACK_SLIDER_STYLE = """
                         border-radius: 3px;
                     }
                 """
-
+CHECKBOX_STYLE = """
+                QCheckBox {
+                    spacing: 10px;
+                    font-family: Consolas;
+                    font-size: 14pt;
+                    color: white;
+                }
+                
+                QCheckBox::indicator {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 5px;
+                    border: 2px solid white;
+                    background-color: rgb(26, 25, 107);  /* unchecked */
+                }
+                
+                QCheckBox::indicator:hover {
+                    background-color: rgb(70, 70, 180); /* hover unchecked: lighter blue */
+                }
+                
+                QCheckBox::indicator:checked {
+                    background-color: rgb(209, 232, 235);  /* checked: light accent like your slider sub-page */
+                    border: 2px solid rgb(4, 43, 94);
+                }
+                
+                QCheckBox::indicator:checked:hover {
+                    background-color: rgb(150, 200, 220);  /* hover checked: slightly darker/light blue */
+                }
+                
+                QCheckBox::indicator:disabled {
+                    background-color: rgb(50, 50, 80);
+                    border: 2px solid rgb(100, 100, 120);
+                }
+            """
 BUTTON_STYLE = """
             QPushButton {
                 font-family: consolas;
