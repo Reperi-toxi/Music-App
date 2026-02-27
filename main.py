@@ -34,6 +34,8 @@ class MainWindow(QMainWindow):
         self.backward_button: QPushButton = QPushButton("-5", self.buttons_widget)
 
         self.auto_replay_checkbox: QCheckBox = QCheckBox("Auto-Replay ⟲", self.extras_widget)
+        self.previous_button: QPushButton = QPushButton("<<Previous", self.extras_widget)
+        self.next_button: QPushButton = QPushButton("Next>>", self.extras_widget)
 
         self.main_label = QLabel("Music Player", self.title_widget)
 
@@ -74,7 +76,9 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.stop_button)
         self.button_layout.addWidget(self.forward_button)
 
+        self.extras_layout.addWidget(self.previous_button)
         self.extras_layout.addWidget(self.auto_replay_checkbox, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.extras_layout.addWidget(self.next_button)
 
         self.volume_layout.addWidget(self.low_volume_label)
         self.volume_layout.addWidget(self.volume_slider)
@@ -119,8 +123,11 @@ class MainWindow(QMainWindow):
         self.play_button.clicked.connect(self.on_click_play)
         self.stop_button.clicked.connect(self.on_click_stop)
         self.forward_button.clicked.connect(self.on_click_forward)
+        self.previous_button.clicked.connect(self.on_click_previous)
+        self.next_button.clicked.connect(self.on_click_next)
         # .. Extras ---------------------------------------------------
-        self.extras_widget.setStyleSheet(CHECKBOX_STYLE)
+        self.auto_replay_checkbox.setStyleSheet(CHECKBOX_STYLE)
+        self.extras_widget.setStyleSheet(BUTTON_STYLE)
         # -- Volume -----------------------------------------------------------------------
         self.volume_layout.setSpacing(20)
         self.low_volume_label.setFont(QFont("", 20))
@@ -149,6 +156,19 @@ class MainWindow(QMainWindow):
         time_str = f"{minutes}:{seconds:02}"  # formatting to minutes:seconds, :02 to maek it two digit
         self.current_time_label.setText(time_str)
 
+    def load_and_play(self, song_name):
+        self.player.load(song_name + ".mp3")
+        self.player.play()
+
+        length = self.player.get_song_length(song_name + ".mp3") or 0.0
+        minutes = int(length // 60)
+        seconds = int(length % 60)
+
+        self.total_time_label.setText(f"{minutes}:{seconds:02}")
+        self.track_slider.setMaximum(int(length))
+        self.main_label.setText(song_name)
+        self.play_button.setText("Pause")
+        self.play_from_beginning = False
     # -- handling track slider -----------------------------------
     def on_track_slider_pressed(self):
         self.is_dragging = True
@@ -182,19 +202,7 @@ class MainWindow(QMainWindow):
             current_song = self.music_list_widget.currentItem()
             if current_song is None:
                 return
-            self.main_label.setText(current_song.text().removesuffix(".mp3"))
-            self.player.load(current_song.text() + ".mp3")
-            self.player.play()
-
-            pos_seconds = self.player.get_song_length(current_song.text() + ".mp3") or 0.0
-            minutes = int(pos_seconds // 60)
-            seconds = int(pos_seconds % 60)
-            time_str = f"{minutes}:{seconds:02}"
-
-            self.play_button.setText("Pause")
-            self.total_time_label.setText(time_str)
-            self.track_slider.setMaximum(int(self.player.get_song_length(current_song.text() + ".mp3")))
-            self.play_from_beginning = False
+            self.load_and_play(current_song.text())
         else:
             if self.player.is_paused:
                 self.player.resume()
@@ -219,7 +227,22 @@ class MainWindow(QMainWindow):
         if self.player.is_paused:
             self.play_button.setText("Pause")
         self.player.go_back()
+    def on_click_previous(self):
+        current_index = self.music_list_widget.currentRow()
+        previous_index = current_index - 1
 
+        if current_index > 0:
+            self.music_list_widget.setCurrentRow(previous_index)
+            current_song = self.music_list_widget.currentItem()
+            self.load_and_play(current_song.text())
+    def on_click_next(self):
+        current_index = self.music_list_widget.currentRow()
+        next_index = current_index + 1
+
+        if next_index < self.music_list_widget.count():
+            self.music_list_widget.setCurrentRow(next_index)
+            current_song = self.music_list_widget.currentItem()
+            self.load_and_play(current_song.text())
     def on_click_song(self):
         self.player.stop()
         self.play_from_beginning = True
@@ -232,6 +255,7 @@ class MainWindow(QMainWindow):
         if self.player.is_playing and not self.is_dragging:
             self.player.play(position=self.track_slider.value())
             self.play_button.setText("Pause")
+
     def handle_song_labels(self):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))
