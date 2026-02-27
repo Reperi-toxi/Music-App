@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
         self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 50))
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet(LIST_WIDGET_STYLE)
-        # self.music_list_widget.clicked.connect(self.on_click_song)
+        self.music_list_widget.clicked.connect(self.on_click_song)
 
     def set_timer(self):
         self.timer.setInterval(200)  # checks every 0.2 seconds
@@ -245,8 +245,10 @@ class MainWindow(QMainWindow):
             self.load_and_play(current_song.text())
     def on_click_song(self):
         self.player.stop()
-        self.play_from_beginning = True
-        self.play_button.setText("Play")
+        current_song = self.music_list_widget.currentItem()
+        if current_song is None:
+            return
+        self.load_and_play(current_song.text())
 
     def on_change_volume(self, volume):
         self.player.set_volume(volume)
