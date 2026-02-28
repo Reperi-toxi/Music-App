@@ -1,5 +1,5 @@
 import sys
-from remote_server import RemoteSignals, start_remote, get_local_ip
+from remote_server import RemoteSignals, start_remote, get_local_ip, set_current_song
 import qrcode
 from io import BytesIO
 from PyQt6.QtGui import QPixmap
@@ -156,6 +156,7 @@ class MainWindow(QMainWindow):
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet(LIST_WIDGET_STYLE)
         self.music_list_widget.clicked.connect(self.on_click_song)
+        self.music_list_widget.setCurrentRow(0)
 
     def set_timer(self):
         self.timer.setInterval(200)  # checks every 0.2 seconds
@@ -182,6 +183,7 @@ class MainWindow(QMainWindow):
         self.total_time_label.setText(f"{minutes}:{seconds:02}")
         self.track_slider.setMaximum(int(length))
         self.main_label.setText(song_name)
+        set_current_song(song_name)
         self.play_button.setText("Pause")
         self.play_from_beginning = False
     # -- handling track slider -----------------------------------
