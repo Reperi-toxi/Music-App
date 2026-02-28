@@ -1,7 +1,11 @@
 import sys
+from remote_server import RemoteSignals, start_remote, get_local_ip
+import qrcode
+from io import BytesIO
+from PyQt6.QtGui import QPixmap
 from music_player import MusicPlayer
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider, QCheckBox)
+                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider, QCheckBox, QDialog)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
 from styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
@@ -34,8 +38,8 @@ class MainWindow(QMainWindow):
         self.backward_button: QPushButton = QPushButton("-5", self.buttons_widget)
 
         self.auto_replay_checkbox: QCheckBox = QCheckBox("Auto-Replay ⟲", self.extras_widget)
-        self.previous_button: QPushButton = QPushButton("<<Previous", self.extras_widget)
-        self.next_button: QPushButton = QPushButton("Next>>", self.extras_widget)
+        self.previous_button: QPushButton = QPushButton("<< Previous", self.extras_widget)
+        self.next_button: QPushButton = QPushButton("Next >>", self.extras_widget)
 
         self.main_label = QLabel("Music Player", self.title_widget)
 
@@ -98,6 +102,17 @@ class MainWindow(QMainWindow):
 
         self.init_ui()
         self.set_timer()
+
+        self.show_qr()
+
+        self._sig = RemoteSignals()
+        self._sig.play.connect(self.on_click_play)
+        self._sig.stop.connect(self.on_click_stop)
+        self._sig.previous.connect(self.on_click_previous)
+        self._sig.next.connect(self.on_click_next)
+        self._sig.backward.connect(self.on_click_backward)
+        self._sig.forward.connect(self.on_click_forward)
+        start_remote(self._sig)
 
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
@@ -262,6 +277,31 @@ class MainWindow(QMainWindow):
         for song in self.music_list:
             self.music_list_widget.addItem(song.removesuffix(".mp3"))
 
+    def show_qr(self):  # possibly temporary solution to connecting phone to the app
+        ip = get_local_ip()
+        url = f"http://{ip}:5000"
+
+        img = qrcode.make(url)
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        pixmap = QPixmap()
+        pixmap.loadFromData(buf.getvalue())
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Scan to connect")
+        dialog.setStyleSheet("background-color: white;")
+        layout = QVBoxLayout()
+        label = QLabel()
+        label.setPixmap(pixmap.scaled(250, 250, Qt.AspectRatioMode.KeepAspectRatio))
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        url_label = QLabel(url)
+        url_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        url_label.setStyleSheet("color: black; font-size: 12px;")
+        layout.addWidget(label)
+        layout.addWidget(url_label)
+        dialog.setLayout(layout)
+        dialog.show()
+        self._qr_dialog = dialog
 def main():
     app = QApplication([])
     window = MainWindow()
