@@ -45,12 +45,12 @@ def HTML():
 
 
 class RemoteSignals(QObject):
-    play     = pyqtSignal()
-    stop     = pyqtSignal()
+    play = pyqtSignal()
+    stop = pyqtSignal()
     previous = pyqtSignal()
-    next     = pyqtSignal()
+    next = pyqtSignal()
     backward = pyqtSignal()
-    forward  = pyqtSignal()
+    forward = pyqtSignal()
 
 
 def get_local_ip():

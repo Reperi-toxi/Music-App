@@ -1,15 +1,19 @@
 import sys
-from remote_server import RemoteSignals, start_remote, get_local_ip, set_current_song
 import qrcode
 from io import BytesIO
-from PyQt6.QtGui import QPixmap
+
+from network import get_local_ip
+from player_handler import PlayerHandler
 from music_player import MusicPlayer
+from styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
+                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE, CHECKBOX_STYLE)
+
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QLabel, QPushButton,
                              QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider, QCheckBox, QDialog)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
-from styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
-                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE, CHECKBOX_STYLE)
+
 
 class MainWindow(QMainWindow):
     width = 700  # size of main window
@@ -96,24 +100,11 @@ class MainWindow(QMainWindow):
         self.volume_container_widget.setLayout(self.volume_layout)
 
         self.music_list = self.player.music_files
-        self.play_from_beginning = True
-        self.is_dragging = False
+
         self.handle_song_labels()
-
         self.init_ui()
-        self.set_timer()
-
         self.show_qr()
-
-        self._sig = RemoteSignals()
-        self._sig.play.connect(self.on_click_play)
-        self._sig.stop.connect(self.on_click_stop)
-        self._sig.previous.connect(self.on_click_previous)
-        self._sig.next.connect(self.on_click_next)
-        self._sig.backward.connect(self.on_click_backward)
-        self._sig.forward.connect(self.on_click_forward)
-        start_remote(self._sig)
-
+        self.handler = PlayerHandler(self, self.player) # now this isntance handles all the logic
     def init_ui(self):
         # -- main label/title widget --------------------------------------------------------
         self.main_label.setFont(QFont("Consolas", 24))
@@ -128,18 +119,8 @@ class MainWindow(QMainWindow):
         self.track_slider.setRange(0, 100)  # arbitrary, updated later with timer
         self.track_slider.setValue(0)
         self.track_slider.setStyleSheet(TRACK_SLIDER_STYLE)
-
-        self.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
-        self.track_slider.sliderReleased.connect(self.on_track_slider_released)
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet(BUTTON_STYLE)
-        # -- Button functionalities ------------------------------------------------------
-        self.backward_button.clicked.connect(self.on_click_backward)
-        self.play_button.clicked.connect(self.on_click_play)
-        self.stop_button.clicked.connect(self.on_click_stop)
-        self.forward_button.clicked.connect(self.on_click_forward)
-        self.previous_button.clicked.connect(self.on_click_previous)
-        self.next_button.clicked.connect(self.on_click_next)
         # .. Extras ---------------------------------------------------
         self.auto_replay_checkbox.setStyleSheet(CHECKBOX_STYLE)
         self.extras_widget.setStyleSheet(BUTTON_STYLE)
@@ -152,128 +133,9 @@ class MainWindow(QMainWindow):
         self.volume_slider.setRange(0, 50)
         self.volume_slider.setValue(50)
         self.volume_slider.setStyleSheet(VOLUME_SLIDER_STYLE)
-        self.volume_slider.valueChanged.connect(lambda value: self.on_change_volume(value / 50))
         # -- List of songs widget ----------------------------------------------------------
         self.music_list_widget.setStyleSheet(LIST_WIDGET_STYLE)
-        self.music_list_widget.clicked.connect(self.on_click_song)
         self.music_list_widget.setCurrentRow(0)
-
-    def set_timer(self):
-        self.timer.setInterval(200)  # checks every 0.2 seconds
-        self.timer.timeout.connect(self.check_song_end)  # check whether song has ended
-        self.timer.timeout.connect(self.update_time_label)  # update current time label
-        self.timer.timeout.connect(self.update_track_slider)
-        self.timer.start()
-
-    def update_time_label(self):
-        pos_seconds = self.player.get_position() or 0.0
-        minutes = int(pos_seconds // 60)
-        seconds = int(pos_seconds % 60)
-        time_str = f"{minutes}:{seconds:02}"  # formatting to minutes:seconds, :02 to maek it two digit
-        self.current_time_label.setText(time_str)
-
-    def load_and_play(self, song_name):
-        self.player.load(song_name + ".mp3")
-        self.player.play()
-
-        length = self.player.get_song_length(song_name + ".mp3") or 0.0
-        minutes = int(length // 60)
-        seconds = int(length % 60)
-
-        self.total_time_label.setText(f"{minutes}:{seconds:02}")
-        self.track_slider.setMaximum(int(length))
-        self.main_label.setText(song_name)
-        set_current_song(song_name)
-        self.play_button.setText("Pause")
-        self.play_from_beginning = False
-    # -- handling track slider -----------------------------------
-    def on_track_slider_pressed(self):
-        self.is_dragging = True
-        self.player.pause()
-
-    def on_track_slider_released(self):
-        self.is_dragging = False
-        self.on_change_track()
-
-    def update_track_slider(self):
-        if not self.is_dragging:
-            self.track_slider.blockSignals(True)
-            self.track_slider.setValue(int(self.player.get_position()))
-            self.track_slider.blockSignals(False)
-    # -------------------------------------------------------------
-    def check_song_end(self):
-        if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
-            # song ended naturally
-            if self.auto_replay_checkbox.isChecked():
-                current_song = self.music_list_widget.currentItem()
-                if current_song:
-                    self.player.load(current_song.text() + ".mp3")
-                    self.player.play()
-            else:
-                self.player.pause()
-                self.play_from_beginning = True
-                self.play_button.setText("Play")
-
-    def on_click_play(self):
-        if self.play_from_beginning:
-            current_song = self.music_list_widget.currentItem()
-            if current_song is None:
-                return
-            self.load_and_play(current_song.text())
-        else:
-            if self.player.is_paused:
-                self.player.resume()
-                self.play_button.setText("Pause")
-            else:
-                self.player.pause()
-                self.play_button.setText("Resume")
-
-    def on_click_stop(self):
-        self.player.stop()
-        self.play_from_beginning = True
-        self.play_button.setText("Play")
-        self.main_label.setText("Music Player")
-        self.total_time_label.setText("0:00")
-
-    def on_click_forward(self):
-        if self.player.is_paused:
-            self.play_button.setText("Pause")
-        self.player.go_forward()
-
-    def on_click_backward(self):
-        if self.player.is_paused:
-            self.play_button.setText("Pause")
-        self.player.go_back()
-    def on_click_previous(self):
-        current_index = self.music_list_widget.currentRow()
-        previous_index = current_index - 1
-
-        if current_index > 0:
-            self.music_list_widget.setCurrentRow(previous_index)
-            current_song = self.music_list_widget.currentItem()
-            self.load_and_play(current_song.text())
-    def on_click_next(self):
-        current_index = self.music_list_widget.currentRow()
-        next_index = current_index + 1
-
-        if next_index < self.music_list_widget.count():
-            self.music_list_widget.setCurrentRow(next_index)
-            current_song = self.music_list_widget.currentItem()
-            self.load_and_play(current_song.text())
-    def on_click_song(self):
-        self.player.stop()
-        current_song = self.music_list_widget.currentItem()
-        if current_song is None:
-            return
-        self.load_and_play(current_song.text())
-
-    def on_change_volume(self, volume):
-        self.player.set_volume(volume)
-
-    def on_change_track(self):
-        if self.player.is_playing and not self.is_dragging:
-            self.player.play(position=self.track_slider.value())
-            self.play_button.setText("Pause")
 
     def handle_song_labels(self):
         for song in self.music_list:
