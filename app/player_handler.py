@@ -1,4 +1,4 @@
-from network import RemoteSignals, start_remote, set_current_song
+from app.network import RemoteSignals, start_remote, set_current_song
 
 # handling logic in this class, trying to leave UI only in MainWindow
 class PlayerHandler:
