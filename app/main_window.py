@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.player = MusicPlayer("songs")
         self.setWindowTitle("Music App")
-        self.setWindowIcon(QIcon("../Icon.png"))
+        self.setWindowIcon(QIcon("Icon.png"))
         self.setGeometry(50, 50, self.width, self.height)
         self.setStyleSheet("Background-Color: rgb(8, 6, 59)")
         # Main blocks of app ---------------------------------------------------------
