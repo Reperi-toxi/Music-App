@@ -40,7 +40,7 @@ class MusicPlayer:
         self.current_song = music_file_name
         self.current_position = 0.0
         self.play_start_time = None
-        self.state_handler.change_state(MusicStates.LOADED)
+        #self.state_handler.change_state(MusicStates.LOADED)
     def get_song_length(self, music_file_name):
         music_path = os.path.join(self.folder, music_file_name)
         audio = MP3(music_path)

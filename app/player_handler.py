@@ -1,4 +1,3 @@
-
 from app.network import RemoteSignals, start_remote, set_current_song
 import random
 from app.music_player.states import MusicStates, StateHandler
@@ -12,6 +11,8 @@ class PlayerHandler:
 
         self.play_from_beginning = True
         self.is_dragging = False
+
+        self.window.track_slider.setDisabled(True)
 
         self.connect_signals()
         self.set_timer()
@@ -79,6 +80,7 @@ class PlayerHandler:
         self.window.main_label.setText(song_name)
         set_current_song(song_name)
         self.play_from_beginning = False
+        self.window.music_list_widget.mark_playing(self.window.music_list_widget.currentRow())
 
     def on_click_play(self):
         w = self.window

@@ -1,15 +1,15 @@
 import qrcode
 from io import BytesIO
-
+from app.visuals.song_list_style import ListWidgetUI
 from app.network import get_local_ip
 from app.player_handler import PlayerHandler
 from app.music_player import MusicPlayer
-from app.styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, BUTTON_STYLE,
-                    VOLUME_SLIDER_STYLE, LIST_WIDGET_STYLE, CHECKBOX_STYLE)
+from app.visuals.styles import (MAIN_LABEL_STYLE, TRACK_SLIDER_STYLE, VOLUME_SLIDER_STYLE,
+                                BUTTON_STYLE, CHECKBOX_STYLE)
 
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (QMainWindow, QLabel, QPushButton,
-                             QVBoxLayout, QHBoxLayout, QWidget, QListWidget, QSlider, QCheckBox, QDialog)
+                             QVBoxLayout, QHBoxLayout, QWidget, QSlider, QCheckBox, QDialog)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QTimer
 
@@ -33,7 +33,8 @@ class MainWindow(QMainWindow):
         self.buttons_widget = QWidget()
         self.extras_widget = QWidget()
         self.volume_container_widget = QWidget()
-        self.music_list_widget: QListWidget = QListWidget()  # type hints to avoid warnings, annoying ah
+        #self.music_list_widget: QListWidget = QListWidget()  # type hints to avoid warnings, annoying ah
+        self.music_list_widget = ListWidgetUI()
         # Buttons labels and etc. ----------------------------------------------------
         self.play_button: QPushButton = QPushButton("Play", self.buttons_widget)
         self.stop_button: QPushButton = QPushButton("Stop", self.buttons_widget)
@@ -79,15 +80,15 @@ class MainWindow(QMainWindow):
         self.track_layout.addWidget(self.track_slider)
         self.track_layout.addWidget(self.total_time_label)
 
-        self.button_layout.addWidget(self.backward_button)
-        self.button_layout.addWidget(self.play_button)
-        self.button_layout.addWidget(self.stop_button)
-        self.button_layout.addWidget(self.forward_button)
+        self.button_layout.addWidget(self.backward_button, stretch=3)
+        self.button_layout.addWidget(self.play_button, stretch=4)
+        self.button_layout.addWidget(self.stop_button, stretch=4)
+        self.button_layout.addWidget(self.forward_button, stretch=3)
 
-        self.extras_layout.addWidget(self.previous_button, stretch = 5)
-        self.extras_layout.addWidget(self.auto_replay_checkbox, stretch = 1)
-        self.extras_layout.addWidget(self.shuffle_checkbox, stretch = 1)
-        self.extras_layout.addWidget(self.next_button, stretch = 5)
+        self.extras_layout.addWidget(self.previous_button)
+        self.extras_layout.addWidget(self.auto_replay_checkbox)
+        self.extras_layout.addWidget(self.shuffle_checkbox)
+        self.extras_layout.addWidget(self.next_button)
 
         self.volume_layout.addWidget(self.low_volume_label)
         self.volume_layout.addWidget(self.volume_slider)
@@ -137,7 +138,6 @@ class MainWindow(QMainWindow):
         self.volume_slider.setValue(50)
         self.volume_slider.setStyleSheet(VOLUME_SLIDER_STYLE)
         # -- List of songs widget ----------------------------------------------------------
-        self.music_list_widget.setStyleSheet(LIST_WIDGET_STYLE)
         self.music_list_widget.setCurrentRow(0)
 
     def handle_song_labels(self):

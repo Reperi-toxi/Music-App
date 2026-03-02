@@ -55,22 +55,29 @@ CHECKBOX_STYLE = """
                     border: 2px solid rgb(100, 100, 120);
                 }
             """
-BUTTON_STYLE = """
-            QPushButton {
-                font-family: consolas;
-                font-size: 16pt;
-                color: rgb(4, 43, 94);
-                background-color: white;
-            }
-            QPushButton:hover {
-                background-color: rgb(230, 230, 230);
-            }
-            QPushButton:pressed {
-                background-color: rgb(4, 43, 94);
-                color: white;
-            }
-        """
 
+BUTTON_STYLE = """
+                QPushButton {
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
+                        stop:0 #7850ff, stop:1 #5030cc);
+                    border-radius: 15px;
+                    color: white;
+                    font-size: 18px;
+                    font-weight: bold;
+                    min-width: 36px;
+                    min-height: 36px;
+                    border: none;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
+                        stop:0 #9070ff, stop:1 #7050ee);
+                    /* simulate glow with border */
+                    border: 2px solid rgba(120,80,255,0.6);
+                }
+                QPushButton:pressed {
+                    background: rgb(60, 40, 160);
+                }    
+            """
 VOLUME_SLIDER_STYLE = """
             QSlider::groove:horizontal {
                 height: 6px;
@@ -93,52 +100,31 @@ VOLUME_SLIDER_STYLE = """
 
 LIST_WIDGET_STYLE = """
             QListWidget {
-                background-color: rgb(26, 25, 107);
-                color: White;
-                border: 1px solid white;
-                border-radius: 5px;
-                padding: 5px;
-                font-size: 14px;
-            }
-            QListWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #444;
-            }
-            QListWidget::item:selected {
-                background-color: #0078d4;
-                color: white;
-            }
-            QListWidget:focus {
-                outline: none;
-            }
-            QListWidget::item:hover {
-                Color: rgb(4, 43, 94);
-                background-color: #b8b8e3;
-            }
-            QListWidget::item:selected:hover {
-                Color: White;
-                background-color: #2c2cf5;
+                background: rgba(18, 15, 45, 0.95);
+                border: 1px solid rgba(120, 80, 255, 0.2);
+                border-radius: 12px;
+                padding: 4px;
+                outline: 0;
             }
             QScrollBar:vertical {
-                background: rgb(26, 25, 107);
-                width: 8px;
-                border-radius: 4px;
+                background: transparent;
+                width: 6px;
+                margin: 6px 2px;
             }
             QScrollBar::handle:vertical {
-                background: rgb(209, 232, 235);
-                border-radius: 4px;
+                background: rgba(120, 80, 255, 0.4);
+                border-radius: 3px;
                 min-height: 20px;
             }
             QScrollBar::handle:vertical:hover {
-                background: white;
+                background: rgba(150, 110, 255, 0.7);
             }
-            QScrollBar::add-line:vertical {
-                height: 0px;
-            }
+            QScrollBar::add-line:vertical,
             QScrollBar::sub-line:vertical {
                 height: 0px;
             }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {
+                background: transparent;
             }
         """
