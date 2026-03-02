@@ -79,7 +79,7 @@ class MusicPlayer:
 
     def go_forward(self, seconds=5):
         # Go forward 5 seconds
-        if not self.state_handler.is_state(MusicStates.PLAYING) or self.state_handler.is_state(MusicStates.PAUSED):
+        if self.state_handler.is_state(MusicStates.PLAYING) or self.state_handler.is_state(MusicStates.PAUSED):
             self.play(min(self.get_song_length(self.current_song),self.get_position() + seconds))
 
     def set_volume(self, volume: float):
