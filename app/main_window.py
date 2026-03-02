@@ -40,8 +40,9 @@ class MainWindow(QMainWindow):
         self.forward_button: QPushButton = QPushButton("+5", self.buttons_widget)
         self.backward_button: QPushButton = QPushButton("-5", self.buttons_widget)
 
-        self.auto_replay_checkbox: QCheckBox = QCheckBox("Auto-Replay ⟲", self.extras_widget)
         self.previous_button: QPushButton = QPushButton("<< Previous", self.extras_widget)
+        self.auto_replay_checkbox: QCheckBox = QCheckBox("Auto-Replay ⟲", self.extras_widget)
+        self.shuffle_checkbox: QCheckBox = QCheckBox("Shuffle ⤨")
         self.next_button: QPushButton = QPushButton("Next >>", self.extras_widget)
 
         self.main_label = QLabel("Music Player", self.title_widget)
@@ -83,9 +84,10 @@ class MainWindow(QMainWindow):
         self.button_layout.addWidget(self.stop_button)
         self.button_layout.addWidget(self.forward_button)
 
-        self.extras_layout.addWidget(self.previous_button)
-        self.extras_layout.addWidget(self.auto_replay_checkbox, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.extras_layout.addWidget(self.next_button)
+        self.extras_layout.addWidget(self.previous_button, stretch = 5)
+        self.extras_layout.addWidget(self.auto_replay_checkbox, stretch = 1)
+        self.extras_layout.addWidget(self.shuffle_checkbox, stretch = 1)
+        self.extras_layout.addWidget(self.next_button, stretch = 5)
 
         self.volume_layout.addWidget(self.low_volume_label)
         self.volume_layout.addWidget(self.volume_slider)
@@ -121,6 +123,8 @@ class MainWindow(QMainWindow):
         # -- Buttons --------------------------------------------------------
         self.buttons_widget.setStyleSheet(BUTTON_STYLE)
         # .. Extras ---------------------------------------------------
+        self.extras_layout.setSpacing(15)
+        self.shuffle_checkbox.setStyleSheet(CHECKBOX_STYLE)
         self.auto_replay_checkbox.setStyleSheet(CHECKBOX_STYLE)
         self.extras_widget.setStyleSheet(BUTTON_STYLE)
         # -- Volume -----------------------------------------------------------------------

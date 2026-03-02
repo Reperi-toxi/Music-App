@@ -1,9 +1,10 @@
 from app.network import RemoteSignals, start_remote, set_current_song
-
+import random
 # handling logic in this class, trying to leave UI only in MainWindow
 class PlayerHandler:
     def __init__(self, window, player):
-        self.window = window
+        self.window = window # :MainWindow temporarily, might have to change it if we use several windows
+
         self.player = player
 
         self.play_from_beginning = True
@@ -23,7 +24,7 @@ class PlayerHandler:
         w.previous_button.clicked.connect(self.on_click_previous)
         w.next_button.clicked.connect(self.on_click_next)
 
-        w.music_list_widget.clicked.connect(self.on_click_song)
+        w.music_list_widget.currentItemChanged.connect(self.on_click_song)
 
         w.track_slider.sliderPressed.connect(self.on_track_slider_pressed)
         w.track_slider.sliderReleased.connect(self.on_track_slider_released)
@@ -31,19 +32,6 @@ class PlayerHandler:
         w.volume_slider.valueChanged.connect(
             lambda value: self.on_change_volume(value / 50)
         )
-
-    def setup_remote(self):
-        self._sig = RemoteSignals()
-        self._sig.play.connect(self.on_click_play)
-        self._sig.stop.connect(self.on_click_stop)
-        self._sig.previous.connect(self.on_click_previous)
-        self._sig.next.connect(self.on_click_next)
-        self._sig.backward.connect(self.on_click_backward)
-        self._sig.forward.connect(self.on_click_forward)
-        start_remote(self._sig)
-
-    # ---- ALL YOUR ORIGINAL METHODS BELOW (UNCHANGED LOGIC) ----
-    # (Just replace self -> self.window where accessing UI)
 
     def set_timer(self):
         self.window.timer.setInterval(200)
@@ -58,6 +46,9 @@ class PlayerHandler:
         seconds = int(pos_seconds % 60)
         self.window.current_time_label.setText(f"{minutes}:{seconds:02}")
 
+
+    def check_song_states(self):
+        pass
     def load_and_play(self, song_name):
         self.player.load(song_name + ".mp3")
         self.player.play()
@@ -132,7 +123,6 @@ class PlayerHandler:
 
     def on_change_volume(self, volume):
         self.player.set_volume(volume)
-
     def on_track_slider_pressed(self):
         self.is_dragging = True
         self.player.pause()
@@ -154,13 +144,29 @@ class PlayerHandler:
 
     def check_song_end(self):
         w = self.window
+        current_song = w.music_list_widget.currentItem()
         if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
-            if w.auto_replay_checkbox.isChecked():
-                current_song = w.music_list_widget.currentItem()
+            if w.auto_replay_checkbox.isChecked():  # auto replaying
                 if current_song:
                     self.player.load(current_song.text() + ".mp3")
                     self.player.play()
-            else:
+            elif w.shuffle_checkbox.isChecked():   # shuffling
+                random_row = random.randrange(w.music_list_widget.count())
+                if current_song:
+                    w.music_list_widget.setCurrentRow(random_row)
+
+            else:  # none selected, just end song
                 self.player.pause()
                 self.play_from_beginning = True
                 w.play_button.setText("Play")
+
+
+    def setup_remote(self):
+        self._sig = RemoteSignals()
+        self._sig.play.connect(self.on_click_play)
+        self._sig.stop.connect(self.on_click_stop)
+        self._sig.previous.connect(self.on_click_previous)
+        self._sig.next.connect(self.on_click_next)
+        self._sig.backward.connect(self.on_click_backward)
+        self._sig.forward.connect(self.on_click_forward)
+        start_remote(self._sig)
