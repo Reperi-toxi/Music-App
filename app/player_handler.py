@@ -1,11 +1,14 @@
+
 from app.network import RemoteSignals, start_remote, set_current_song
 import random
+from app.music_player.states import MusicStates, StateHandler
 # handling logic in this class, trying to leave UI only in MainWindow
 class PlayerHandler:
     def __init__(self, window, player):
         self.window = window # :MainWindow temporarily, might have to change it if we use several windows
 
         self.player = player
+        self.state_handler = self.player.state_handler
 
         self.play_from_beginning = True
         self.is_dragging = False
@@ -33,6 +36,8 @@ class PlayerHandler:
             lambda value: self.on_change_volume(value / 50)
         )
 
+        self.state_handler.state_changed.connect(self.on_state_changed)
+
     def set_timer(self):
         self.window.timer.setInterval(200)
         self.window.timer.timeout.connect(self.check_song_end)
@@ -47,8 +52,20 @@ class PlayerHandler:
         self.window.current_time_label.setText(f"{minutes}:{seconds:02}")
 
 
-    def check_song_states(self):
-        pass
+    def on_state_changed(self, state):
+        w = self.window
+        if state == MusicStates.STOPPED:
+            w.play_button.setText("Play")
+            w.main_label.setText("Music Player")
+            w.total_time_label.setText("0:00")
+            w.track_slider.setDisabled(True)
+        if state == MusicStates.PLAYING:
+            w.play_button.setText("Pause")
+            w.track_slider.setEnabled(True)
+        if state == MusicStates.PAUSED:
+            w.play_button.setText("Resume")
+            w.track_slider.setEnabled(True)
+
     def load_and_play(self, song_name):
         self.player.load(song_name + ".mp3")
         self.player.play()
@@ -61,7 +78,6 @@ class PlayerHandler:
         self.window.track_slider.setMaximum(int(length))
         self.window.main_label.setText(song_name)
         set_current_song(song_name)
-        self.window.play_button.setText("Pause")
         self.play_from_beginning = False
 
     def on_click_play(self):
@@ -72,20 +88,16 @@ class PlayerHandler:
                 return
             self.load_and_play(current_song.text())
         else:
-            if self.player.is_paused:
+            if self.state_handler.is_state(MusicStates.PAUSED):
+                print("A")
                 self.player.resume()
-                w.play_button.setText("Pause")
-            else:
+            elif self.state_handler.is_state(MusicStates.PLAYING):
                 self.player.pause()
-                w.play_button.setText("Resume")
 
     def on_click_stop(self):
         w = self.window
         self.player.stop()
         self.play_from_beginning = True
-        w.play_button.setText("Play")
-        w.main_label.setText("Music Player")
-        w.total_time_label.setText("0:00")
 
     def on_click_song(self):
         w = self.window
@@ -112,13 +124,9 @@ class PlayerHandler:
             self.load_and_play(w.music_list_widget.currentItem().text())
 
     def on_click_forward(self):
-        if self.player.is_paused:
-            self.window.play_button.setText("Pause")
         self.player.go_forward()
 
     def on_click_backward(self):
-        if self.player.is_paused:
-            self.window.play_button.setText("Pause")
         self.player.go_back()
 
     def on_change_volume(self, volume):
@@ -132,9 +140,8 @@ class PlayerHandler:
         self.on_change_track()
 
     def on_change_track(self):
-        if self.player.is_playing and not self.is_dragging:
+        if not self.is_dragging:
             self.player.play(position=self.window.track_slider.value())
-            self.window.play_button.setText("Pause")
 
     def update_track_slider(self):
         if not self.is_dragging:
@@ -145,11 +152,10 @@ class PlayerHandler:
     def check_song_end(self):
         w = self.window
         current_song = w.music_list_widget.currentItem()
-        if not self.player.get_busy() and self.player.is_playing and not self.player.is_paused:
+        if self.state_handler.state == MusicStates.PLAYING and not self.player.get_busy():
             if w.auto_replay_checkbox.isChecked():  # auto replaying
                 if current_song:
-                    self.player.load(current_song.text() + ".mp3")
-                    self.player.play()
+                    self.load_and_play(current_song.text())
             elif w.shuffle_checkbox.isChecked():   # shuffling
                 random_row = random.randrange(w.music_list_widget.count())
                 if current_song:
@@ -158,7 +164,6 @@ class PlayerHandler:
             else:  # none selected, just end song
                 self.player.pause()
                 self.play_from_beginning = True
-                w.play_button.setText("Play")
 
 
     def setup_remote(self):
