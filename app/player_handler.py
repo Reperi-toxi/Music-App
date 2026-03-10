@@ -1,6 +1,7 @@
-from app.network import RemoteSignals, start_remote, set_current_song
+
+from .network import RemoteSignals, start_remote, set_current_song
 import random
-from app.music_player.states import MusicStates, StateHandler
+from .music_player.states import MusicStates
 # handling logic in this class, trying to leave UI only in MainWindow
 class PlayerHandler:
     def __init__(self, window, player):
@@ -91,7 +92,6 @@ class PlayerHandler:
             self.load_and_play(current_song.text())
         else:
             if self.state_handler.is_state(MusicStates.PAUSED):
-                print("A")
                 self.player.resume()
             elif self.state_handler.is_state(MusicStates.PLAYING):
                 self.player.pause()
@@ -163,9 +163,10 @@ class PlayerHandler:
                 if current_song:
                     w.music_list_widget.setCurrentRow(random_row)
 
-            else:  # none selected, just end song
-                self.player.pause()
-                self.play_from_beginning = True
+            else:  # none selected, move to next
+                w.music_list_widget.setCurrentRow(w.music_list_widget.currentRow() + 1)
+                current_song = w.music_list_widget.currentItem()
+                self.load_and_play(current_song.text())
 
 
     def setup_remote(self):
