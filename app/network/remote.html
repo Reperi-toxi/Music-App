@@ -1,71 +1,137 @@
 <!DOCTYPE html>
-<html lang = "en">
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {
-        background:#111;
-        display:flex;
-        flex-wrap:wrap;
-        gap:12px;
-        padding:20px;
-        justify-content:center;
-      }
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
 
-      h1 {
-        width:100%;
-        text-align:center;
-        color:#fff;
-        font-family:sans-serif;
-        font-size:1rem;
-        font-weight:normal;
-        margin:0 0 8px;
-      }
+  <style>
+    body {
+      margin:0;
+      background:#111;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      font-family:sans-serif;
+    }
 
-      a {
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        width:120px;
-        height:80px;
-        background:#222;
-        color:#fff;
-        font-size:1.1rem;
-        font-family:sans-serif;
-        text-decoration:none;
-        border-radius:12px;
-        border:1px solid #444;
-      }
+    .remote {
+      background:#181818;
+      padding:20px;
+      border-radius:20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      width:300px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
 
-      a:active {
-        background:#444;
+    h1 {
+      text-align:center;
+      color:#fff;
+      font-size:1.2rem;
+      margin:0;
+      letter-spacing:1px;
+      opacity:0.9;
+      text-shadow: 0 0 8px rgba(255,255,255,0.3);
+    }
+
+    .controls {
+      display:flex;
+      gap:12px;
+      justify-content:center;
+    }
+
+    button {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:120px;
+      height:80px;
+      background:linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      color:#fff;
+      font-size:1.2rem;
+      border-radius:16px;
+      border:none;
+      box-shadow:
+        4px 4px 10px #0a0a0a,
+        -2px -2px 6px #2f2f2f;
+      transition: all 0.15s ease;
+    }
+
+    button.small {
+      width:80px;
+      height:60px;
+      font-size:1rem;
+    }
+
+    button.main {
+      width:100%;
+      height:90px;
+      font-size:1.5rem;
+      background: linear-gradient(145deg, #2e7dff, #1a5edb);
+      box-shadow: 0 0 12px rgba(46,125,255,0.6);
+    }
+
+    @media (hover: hover) {
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          6px 6px 14px #000,
+          -2px -2px 6px #333;
+        color:#aaa;
       }
-    </style>
-    <title></title>
+    }
+
+    button:active {
+      transform: scale(0.92);
+      box-shadow: inset 2px 2px 6px #000;
+    }
+  </style>
 </head>
 
 <body>
 
-      <h1 id="title">{{song_name}}</h1>
+  <div class="remote">
+    <h1 id="title">{{song_name}}</h1>
 
-      <a onclick="cmd('/play')">▶ / ⏸</a>
-      <a onclick="cmd('/stop')">⏹ Stop</a>
-      <a onclick="cmd('/prev')">⏮ Prev</a>
-      <a onclick="cmd('/next')">⏭ Next</a>
-      <a onclick="cmd('/back')">-5s</a>
-      <a onclick="cmd('/fwd')">+5s</a>
+    <button class="main" onclick="cmd('/play')">▶ / ⏸</button>
 
-    <script>
-      async function cmd(action) {
-        await fetch(action);
+    <div class="controls">
+      <button onclick="cmd('/stop')">⏹</button>
+    </div>
 
-        setTimeout(async () => {
-          const r = await fetch('/song');
-          const d = await r.json();
-          document.getElementById('title').textContent = d.name;
-        }, 300);
+    <div class="controls">
+      <button class="small" onclick="cmd('/prev')">⏮</button>
+      <button class="small" onclick="cmd('/next')">⏭</button>
+    </div>
+
+    <div class="controls">
+      <button class="small" onclick="cmd('/back')">-5s</button>
+      <button class="small" onclick="cmd('/fwd')">+5s</button>
+    </div>
+  </div>
+
+  <script>
+    let lastName = "";
+
+    async function updateSong() {
+      const r = await fetch('/song');
+      const d = await r.json();
+
+      if (d.name !== lastName) {
+        document.getElementById('title').textContent = d.name;
+        lastName = d.name;
       }
-    </script>
+    }
+
+    async function cmd(action) {
+      await fetch(action);
+      await updateSong();
+    }
+
+    setInterval(updateSong, 1000);
+  </script>
 
 </body>
 </html>
