@@ -28,7 +28,6 @@ class PlayerHandler:
         w.forward_button.clicked.connect(self.on_click_forward)
         w.previous_button.clicked.connect(self.on_click_previous)
         w.next_button.clicked.connect(self.on_click_next)
-
         w.music_list_widget.currentItemChanged.connect(self.on_click_song)
 
         w.track_slider.sliderPressed.connect(self.on_track_slider_pressed)

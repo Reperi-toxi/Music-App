@@ -46,6 +46,13 @@ def start_remote(signals, port=5000):
     import logging
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
+    @app.route("/style.css")
+    def stylesheet():
+        css_path = os.path.join(os.path.dirname(__file__), "style.css")
+        with open(css_path, "r", encoding="utf-8") as f:
+            css = f.read()
+        return app.response_class(response=css, mimetype="text/css")
+
     @app.route("/song")
     def song():
         return app.response_class(
